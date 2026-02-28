@@ -1,0 +1,117 @@
+def call(Map config = [:]) {
+
+    pipeline {
+        agent any
+
+        options {
+            disableConcurrentBuilds()
+            timestamps()
+        }
+
+        environment {
+            IMAGE_NAME      = config.appName
+            CONTAINER_NAME  = config.containerName ?: config.appName
+            DOCKER_NETWORK  = config.network ?: 'jenkins-custom_default'
+            PORT            = config.port ?: "8080"
+            DOCKER_USER     = config.dockerUser
+            DOCKER_CRED_ID  = config.dockerCredId
+        }
+
+        stages {
+
+            stage('Checkout') {
+                steps {
+                    checkout scm
+                }
+            }
+
+            stage('Prepare Metadata') {
+                steps {
+                    script {
+                        def commit = sh(
+                                script: "git rev-parse --short HEAD",
+                                returnStdout: true
+                        ).trim()
+
+                        env.IMAGE_TAG = "${env.BUILD_NUMBER}-${commit}"
+                        echo "Image Tag: ${env.IMAGE_TAG}"
+                    }
+                }
+            }
+
+            stage('Docker Login') {
+                steps {
+                    dockerLogin(env.DOCKER_CRED_ID)
+                }
+            }
+
+            stage('Build & Push') {
+                steps {
+                    buildAndPush(
+                            env.DOCKER_USER,
+                            env.IMAGE_NAME,
+                            env.IMAGE_TAG
+                    )
+                }
+            }
+
+            stage('Capture Previous Image') {
+                steps {
+                    script {
+                        env.PREVIOUS_IMAGE = sh(
+                                script: "docker inspect --format='{{.Config.Image}}' ${env.CONTAINER_NAME} 2>/dev/null || echo 'none'",
+                                returnStdout: true
+                        ).trim()
+
+                        echo "Previous image: ${env.PREVIOUS_IMAGE}"
+                    }
+                }
+            }
+
+            stage('Deploy') {
+                steps {
+                    script {
+                        deployContainer(
+                                "${env.DOCKER_USER}/${env.IMAGE_NAME}:${env.IMAGE_TAG}",
+                                env.CONTAINER_NAME,
+                                env.DOCKER_NETWORK,
+                                env.PORT,
+                                env.IMAGE_TAG
+                        )
+                    }
+                }
+            }
+
+            stage('Health Check') {
+                steps {
+                    script {
+                        def status = healthCheck("http://${env.CONTAINER_NAME}:${env.PORT}/health")
+
+                        if (status != 0) {
+                            rollback(
+                                    env.PREVIOUS_IMAGE,
+                                    env.CONTAINER_NAME,
+                                    env.DOCKER_NETWORK,
+                                    env.PORT
+                            )
+                            error("Health check failed.")
+                        }
+                    }
+                }
+            }
+        }
+
+        post {
+            failure {
+                script {
+                    rollback(
+                            env.PREVIOUS_IMAGE,
+                            env.CONTAINER_NAME,
+                            env.DOCKER_NETWORK,
+                            env.PORT
+                    )
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,18 @@
+# Gradle caches
+.gradle/
+
+# Build outputs (root + subprojects)
+build/
+**/build/
+out/
+**/out/
+
+# Compiled Groovy/Java output folders
+bin/
+**/bin/
+
+# IDE/tooling metadata
+.kotlin/
+.settings/
+.project
+.classpath
