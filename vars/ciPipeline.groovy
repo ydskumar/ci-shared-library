@@ -9,12 +9,12 @@ def call(Map config = [:]) {
         }
 
         environment {
-            IMAGE_NAME      = config.appName
-            CONTAINER_NAME  = config.containerName ?: config.appName
-            DOCKER_NETWORK  = config.network ?: 'jenkins-custom_default'
-            PORT            = config.port ?: "8080"
-            DOCKER_USER     = config.dockerUser
-            DOCKER_CRED_ID  = config.dockerCredId
+            IMAGE_NAME      = "${config.appName}"
+            CONTAINER_NAME  = "${config.containerName ?: config.appName}"
+            DOCKER_NETWORK  = "${config.network ?: 'jenkins-custom_default'}"
+            PORT            = "${config.port ?: "8080"}"
+            DOCKER_USER     = "${config.dockerUser}"
+            DOCKER_CRED_ID  = "${config.dockerCredId}"
         }
 
         stages {
