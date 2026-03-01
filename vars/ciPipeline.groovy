@@ -99,9 +99,34 @@ def call(Map config = [:]) {
                     }
                 }
             }
-        }
+       
+            stage('API Tests') {
+                steps {
+                    script {
 
+                        def result = runApiTests(config.apiTestCommand ?: "echo 'No API tests configured'")
+
+                        if (result != 0) {
+                            echo "API tests failed. Initiating rollback..."
+
+                            rollback(
+                                    env.PREVIOUS_IMAGE,
+                                    env.CONTAINER_NAME,
+                                    env.DOCKER_NETWORK,
+                                    env.PORT
+                            )
+
+                            error("API tests failed after deployment.")
+                        }
+                    }
+                }
+            }
+        }
+        
         post {
+            success {
+                echo "Release ${IMAGE_TAG} deployed successfully."
+            }
             failure {
                 script {
                     rollback(
