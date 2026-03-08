@@ -142,25 +142,9 @@ def call(Map config = [:]) {
                                     ]]
                             ])
 
-                            sh '''
-echo "===== Current directory ====="
-pwd
-echo "===== Files ====="
-ls -la
-echo "===== Recursive ====="
-ls -R
-'''
-
-                            def result = sh(
-                                    script: """
-                                        docker run --rm \
-                                        --network ${env.DOCKER_NETWORK} \
-                                        -v \$PWD:/app \
-                                        -w /app \
-                                        maven:3.9-eclipse-temurin-17 \
-                                        mvn clean test
-                                        """,
-                                    returnStatus: true
+                             def result = sh(
+                                script: "mvn clean test",
+                                returnStatus: true
                             )
 
                             sh 'ls -R target || true'
