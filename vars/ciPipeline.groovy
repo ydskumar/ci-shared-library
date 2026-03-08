@@ -15,6 +15,7 @@ def call(Map config = [:]) {
             PORT            = "${config.port ?: "8080"}"
             DOCKER_USER     = "${config.dockerUser}"
             DOCKER_CRED_ID  = "${config.dockerCredId}"
+            BASE_URL= "http://${env.CONTAINER_NAME}:${env.PORT}"
         }
 
         stages {
@@ -133,6 +134,9 @@ def call(Map config = [:]) {
 
                         dir("qa-tests") { // Create a subdirectory for QA tests as main workspace contains the app repo and QA repo should not overwrite it
 
+                            sh """
+                                BASE_URL=http://my-app:${env.PORT} mvn clean test
+                            """
                             checkout([
                                     $class: 'GitSCM',
                                     branches: [[name: config.qaBranch ?: '*/master']],
