@@ -153,6 +153,8 @@ def call(Map config = [:]) {
                                     returnStatus: true
                             )
 
+                            sh 'ls -R target || true'
+                            
                             if (result != 0) {
                                 echo "QA API tests failed. Rolling back..."
 
