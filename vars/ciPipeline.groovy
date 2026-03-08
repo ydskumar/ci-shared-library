@@ -164,6 +164,13 @@ def call(Map config = [:]) {
             }
 
             stage('API Tests (QA Repo)') {
+
+                agent {
+                    docker {
+                        image 'maven:3.9-eclipse-temurin-17'
+                    }
+                }
+                
                 when {
                     expression { config.qaRepoUrl != null }
                 }
