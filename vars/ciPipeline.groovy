@@ -146,7 +146,7 @@ def call(Map config = [:]) {
                                     script: '''
                                         docker run --rm \
                                         --network ${env.DOCKER_NETWORK} \
-                                        -v $PWD:/app \
+                                        -v ${WORKSPACE}/qa-tests:/app \
                                         -w /app \
                                         maven:3.9-eclipse-temurin-17 \
                                         mvn clean test''',
