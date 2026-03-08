@@ -179,6 +179,7 @@ def call(Map config = [:]) {
                             includeProperties: false,
                             jdk: '',
                             reportBuildPolicy: 'ALWAYS',
+                            commandline: 'allure',
                             results: [[path: 'qa-tests/target/allure-results']]
                         ])
 
