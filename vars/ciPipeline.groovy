@@ -100,7 +100,9 @@ def call(Map config = [:]) {
                 }
             }
        
-            stage('API Tests') {
+
+            // If tests exist in same repo 
+            stage('API Tests (Local)') {
                 steps {
                     script {
 
@@ -117,6 +119,52 @@ def call(Map config = [:]) {
                             )
 
                             error("API tests failed after deployment.")
+                        }
+                    }
+                }
+            }
+
+            stage('API Tests (QA Repo)') {
+                when {
+                    expression { config.qaRepoUrl != null }
+                }
+                steps {
+                    script {
+
+                        dir("qa-tests") { // Create a subdirectory for QA tests as main workspace contains the app repo and QA repo should not overwrite it
+
+                            checkout([
+                                    $class: 'GitSCM',
+                                    branches: [[name: config.qaBranch ?: '*/master']],
+                                    userRemoteConfigs: [[
+                                            url: config.qaRepoUrl,
+                                            credentialsId: config.qaCredId
+                                    ]]
+                            ])
+
+                            def result = sh(
+                                    script: '''
+                                        docker run --rm \
+                                        --network ${env.DOCKER_NETWORK} \
+                                        -v $PWD:/app \
+                                        -w /app \
+                                        maven:3.9-eclipse-temurin-17 \
+                                        mvn clean test''',
+                                    returnStatus: true
+                            )
+
+                            if (result != 0) {
+                                echo "QA API tests failed. Rolling back..."
+
+                                rollback(
+                                        env.PREVIOUS_IMAGE,
+                                        env.CONTAINER_NAME,
+                                        env.DOCKER_NETWORK,
+                                        env.PORT
+                                )
+
+                                error("QA API tests failed after deployment.")
+                            }
                         }
                     }
                 }
