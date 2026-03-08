@@ -168,7 +168,23 @@ def call(Map config = [:]) {
                         }
                     }
                 }
+
+                post {
+                    always {
+
+                        junit 'qa-tests/target/surefire-reports/*.xml'
+
+                        allure([
+                            includeProperties: false,
+                            jdk: '',
+                            results: [[path: 'qa-tests/target/allure-results']]
+                        ])
+
+                        archiveArtifacts artifacts: 'qa-tests/target/**/*', fingerprint: true
+                    }
+                }
             }
+            
         }
         
         post {
