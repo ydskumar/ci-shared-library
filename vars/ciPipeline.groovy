@@ -172,15 +172,18 @@ def call(Map config = [:]) {
                 post {
                     always {
 
-                        junit 'qa-tests/target/surefire-reports/*.xml'
+                        junit allowEmptyResults: true,
+                            testResults: 'qa-tests/target/surefire-reports/*.xml'
 
                         allure([
                             includeProperties: false,
                             jdk: '',
+                            reportBuildPolicy: 'ALWAYS',
                             results: [[path: 'qa-tests/target/allure-results']]
                         ])
 
                         archiveArtifacts artifacts: 'qa-tests/target/**/*', fingerprint: true
+
                     }
                 }
             }
