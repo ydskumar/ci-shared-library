@@ -143,17 +143,18 @@ def call(Map config = [:]) {
                             ])
 
                             def result = sh(
-                                    script: '''
+                                    script: """
                                         docker run --rm \
                                         --network ${env.DOCKER_NETWORK} \
                                         -v ${WORKSPACE}/qa-tests:/app \
                                         -w /app \
                                         maven:3.9-eclipse-temurin-17 \
-                                        mvn clean test''',
+                                        mvn clean test
+                                        """,
                                     returnStatus: true
                             )
 
-                            sh 'ls -R qa-tests/target || true'
+                            sh 'ls -R target || true'
 
                             if (result != 0) {
                                 echo "QA API tests failed. Rolling back..."
