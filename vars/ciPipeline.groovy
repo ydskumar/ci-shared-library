@@ -142,19 +142,10 @@ def call(Map config = [:]) {
                                     ]]
                             ])
 
-                            sh '''
-echo "===== Current directory ====="
-pwd
-echo "===== Files ====="
-ls -la
-echo "===== Recursive ====="
-ls -R
-'''
-
                              def result = sh(
-        script: "mvn clean test",
-        returnStatus: true
-    )
+                                script: "mvn clean test",
+                                returnStatus: true
+                            )
 
                             sh 'ls -R target || true'
 
