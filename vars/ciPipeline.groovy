@@ -165,7 +165,7 @@ pipeline {
 
                     agent {
                         docker {
-                            image 'maven:3.9-eclipse-temurin-17'
+                            image 'maven:3.9-eclipse-temurin-21'
                             args "--network ${env.DOCKER_NETWORK}"
                             reuseNode true
                         }
